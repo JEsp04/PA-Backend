@@ -14,5 +14,6 @@ router.get("/obtener", obtenerProducto);
 router.get("/obtenerPor/:id", obtenerProductoPorId);
 router.patch("/actualizar/:id", actualizarProducto);
 router.delete("/eliminar/:id", eliminarProducto);
+
 router.post("/cargarProductos", cargarProductos);
 export default router;

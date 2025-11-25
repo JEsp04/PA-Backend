@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import Producto from "../models/producto.js";
-import Usuario from "../models/user.js";
 
 export const cargarProductos = async (req, res) => {
   try {

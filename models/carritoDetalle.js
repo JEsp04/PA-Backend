@@ -80,28 +80,7 @@ async function actualizarTotalParaCarrito(carritoId) {
 }
 
 
-CarritoDetalle.afterCreate(async (detalle) => {
-  try {
-    await actualizarTotalParaCarrito(detalle.carritoId);
-  } catch (err) {
-    console.error('Error actualizando total después de crear detalle:', err);
-  }
-});
 
-CarritoDetalle.afterUpdate(async (detalle) => {
-  try {
-    await actualizarTotalParaCarrito(detalle.carritoId);
-  } catch (err) {
-    console.error('Error actualizando total después de actualizar detalle:', err);
-  }
-});
 
-CarritoDetalle.afterDestroy(async (detalle) => {
-  try {
-    await actualizarTotalParaCarrito(detalle.carritoId);
-  } catch (err) {
-    console.error('Error actualizando total después de eliminar detalle:', err);
-  }
-});
 
 export default CarritoDetalle;
