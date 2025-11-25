@@ -16,6 +16,7 @@ const Carrito = sequelize.define("Carrito", {
   total: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
+    defaultValue: 0.00,
   },
 },{ tableName: 'carritos',
   timestamps: true,

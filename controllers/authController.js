@@ -25,12 +25,17 @@ export const registro = async (req,res)=>{
             rol: rol || 'cliente'
          })
 
+         const payload = {id:newUser.id, email: newUser.email};
+
+         const token = jwt.sign(payload,process.env.JWT_SECRET,{expiresIn: "1h"})
+
          const userSafe = newUser.toJSON();
          delete userSafe.password;
 
          return res.status(201).json({
             message: "Usuario registrado con exito",
-            user: userSafe
+            user: userSafe,
+            token
          })
 
     }catch(error){

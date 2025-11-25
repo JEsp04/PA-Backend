@@ -1,17 +1,9 @@
-import { Router } from "express";
-import { 
-    crearPago, 
-    obtenerPagos,
-    obtenerPagoPorId,
-    actualizarPago, 
-    eliminarPago } from "../controllers/pagoController.js";
+import express from "express";
+import { crearPago } from "../controllers/pagoController.js";
+import { recibirWebhook } from "../controllers/webHookController.js";
 
-const router = Router();
+const router = express.Router();
 
-router.post("/crear", crearPago);
-router.get("/obtener", obtenerPagos);
-router.put("/obtenerPor/:id", obtenerPagoPorId);
-router.patch("/actualizar/:id", actualizarPago);
-router.delete("/eliminar/:id", eliminarPago);
+router.post("/CrearPago", crearPago);
 
 export default router;

@@ -1,113 +1,57 @@
 import Pago from "../models/pago.js";
 import Orden from "../models/orden.js";
-import { actualizarEstadoOrdenSegunPago } from "../utils/ordenUtils.js";
+import { Preference } from "mercadopago";
 
 export const crearPago = async (req, res) => {
   try {
-    const { ordenId, usuarioId, metodoPago, monto, estado } = req.body;
-    if (!ordenId) return res.status(400).json({ message: "ordenId es obligatorio" });
+    const { ordenId, usuarioId, monto } = req.body;
 
     const orden = await Orden.findByPk(ordenId);
-    if (!orden) return res.status(404).json({ message: "Orden no encontrada" });
+    if (!orden) return res.status(404).json({ error: "Orden no encontrada" });
 
-    const montoFinal = monto === undefined || monto === null ? Number(orden.total) : Number(monto);
-    if (Number.isNaN(montoFinal) || montoFinal < 0) return res.status(400).json({ message: "monto inválido" });
+    const preferenceData = {
+      items: [
+        {
+          title: `Pago Orden #${ordenId}`,
+          unit_price: Number(monto),
+          quantity: 1,
+        },
+      ],
+      notification_url:
+        process.env.WEBHOOK_URL || "https://TU_NGROK/api/pagos/webhook",
+      back_urls: {
+        success: process.env.FRONTEND_URL
+          ? process.env.FRONTEND_URL + "/success"
+          : "http://localhost:5173/success",
+        failure: process.env.FRONTEND_URL
+          ? process.env.FRONTEND_URL + "/failure"
+          : "http://localhost:5173/failure",
+        pending: process.env.FRONTEND_URL
+          ? process.env.FRONTEND_URL + "/pending"
+          : "http://localhost:5173/pending",
+      },
+      auto_return: "approved",
+    };
+
+    const preference = new Preference(global.mercadoPago);
+    const result = await preference.create({ body: preferenceData });
 
     const pago = await Pago.create({
       ordenId,
-      usuarioId: usuarioId ?? orden.usuarioId,
-      metodoPago: metodoPago ?? null,
-      monto: montoFinal,
-      estado: estado ?? "pendiente",
-      fechaPago: new Date(),
+      usuarioId,
+      monto,
+      metodoPago: "mercado_pago",
+      preferenceId: result.body.id,
+      estado: "pendiente",
     });
 
-    try {
-      await actualizarEstadoOrdenSegunPago(ordenId, pago.estado);
-    } catch (e) {
-      console.error("Error actualizando estado de orden desde pago:", e);
-    }
-
-    const ordenActualizada = await Orden.findByPk(ordenId);
-    return res.status(201).json({ pago, orden: ordenActualizada });
-  } catch (error) {
-    return res.status(500).json({ message: "Error al crear pago", error: error.message || error });
-  }
-};
-
-export const obtenerPagos = async (req, res) => {
-  try {
-    const where = {};
-    if (req.query.ordenId) where.ordenId = req.query.ordenId;
-    if (req.query.usuarioId) where.usuarioId = req.query.usuarioId;
-    const pagos = await Pago.findAll({ where });
-    return res.json(pagos);
-  } catch (error) {
-    return res.status(500).json({ message: "Error al obtener pagos", error: error.message || error });
-  }
-};
-
-export const obtenerPagoPorId = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const pago = await Pago.findByPk(id);
-    if (!pago) return res.status(404).json({ message: "Pago no encontrado" });
-    return res.json(pago);
-  } catch (error) {
-    return res.status(500).json({ message: "Error al obtener pago", error: error.message || error });
-  }
-};
-
-export const actualizarPago = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const pago = await Pago.findByPk(id);
-    if (!pago) return res.status(404).json({ message: "Pago no encontrado" });
-
-    const { monto, metodoPago, estado } = req.body;
-
-    const updates = {};
-    if (monto !== undefined) {
-      const montoNum = Number(monto);
-      if (Number.isNaN(montoNum) || montoNum < 0) return res.status(400).json({ message: "monto inválido" });
-      updates.monto = montoNum;
-    }
-    if (metodoPago !== undefined) updates.metodoPago = metodoPago;
-    if (estado !== undefined) updates.estado = estado;
-
-    await pago.update(updates);
-
-    try {
-      await actualizarEstadoOrdenSegunPago(pago.ordenId, pago.estado);
-    } catch (e) {
-      console.error("Error actualizando estado de orden desde pago (update):", e);
-    }
-
-    const ordenActualizada = await Orden.findByPk(pago.ordenId);
-    return res.json({ pago, orden: ordenActualizada });
-  } catch (error) {
-    return res.status(500).json({ message: "Error al actualizar pago", error: error.message || error });
-  }
-};
-
-export const eliminarPago = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const pago = await Pago.findByPk(id);
-    if (!pago) return res.status(404).json({ message: "Pago no encontrado" });
-
-    const ordenId = pago.ordenId;
-    await pago.destroy();
-
-    try {
-      const pagosCompletados = await Pago.count({ where: { ordenId, estado: "completado" } });
-      await actualizarEstadoOrdenSegunPago(ordenId, pagosCompletados > 0 ? "completado" : "pendiente");
-    } catch (e) {
-      console.error("Error actualizando estado de orden desde pago (delete):", e);
-    }
-
-    return res.json({ message: "Pago eliminado" });
-  } catch (error) {
-    return res.status(500).json({ message: "Error al eliminar pago", error: error.message || error });
+    return res.json({
+      preferenceId: result.body.id,
+      init_point: result.body.init_point,
+      sandbox_init_point: result.body.sandbox_init_point,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Error creando pago" });
   }
 };

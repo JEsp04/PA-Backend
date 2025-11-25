@@ -10,6 +10,7 @@ export async function recalcularTotal(carritoId) {
     return acc + precio * cantidad;
   }, 0);
   const totalFixed = Number(total.toFixed(2));
-  await Carrito.update({ total: totalFixed }, { where: { id: carritoId } });
+  // FIX: cambiar 'id' a 'carritoId' (el nombre real de la columna PK)
+  await Carrito.update({ total: totalFixed }, { where: { carritoId } });
   return await Carrito.findByPk(carritoId);
 }

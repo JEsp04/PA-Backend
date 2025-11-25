@@ -1,6 +1,5 @@
 import Usuario from "../models/user.js";
 
-
 export const obtenerUsuarios = async (req, res) => {
   try {
     const usuarios = await Usuario.findAll();

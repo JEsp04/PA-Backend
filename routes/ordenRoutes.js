@@ -1,17 +1,12 @@
-import { Router } from "express";
+import express from "express";
+import ordenController from "../controllers/ordenController.js";
 
-import {
-    crearOrden,
-    obtenerOrdenes,
-    obtenerOrdenPorId,
-    eliminarOrden,
-} from "../controllers/ordenController.js";
+const router = express.Router();
 
-const router = Router();
-
-router.post("/crear", crearOrden);
-router.get("/obtener", obtenerOrdenes);
-router.get("/obtenerPor/:id", obtenerOrdenPorId);
-router.delete("/eliminar/:id", eliminarOrden);
+router.post("/CrearOrden", ordenController.crearOrden);
+router.get("/ObtenerOrdenes", ordenController.obtenerOrdenes);
+router.get("/ObtenerOrdenesPorUsuario/:usuarioId", ordenController.obtenerOrdenesPorUsuario);
+router.put("/ActualizarOrden/:id", ordenController.actualizarEstado);
+router.delete("/EliminarOrden/:id", ordenController.eliminarOrden);
 
 export default router;

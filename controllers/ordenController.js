@@ -1,48 +1,91 @@
 import Orden from "../models/orden.js";
-import { recalcularTotalOrden, actualizarEstadoOrdenSegunPago } from "../utils/ordenUtils.js";
 
-export const crearOrden = async (req, res) => {
-  try {
-    const { usuarioId } = req.body;
-    if (!usuarioId) return res.status(400).json({ message: "usuarioId es obligatorio" });
-    const orden = await Orden.create({ usuarioId, total: 0, estado: "pendiente" });
-    return res.status(201).json(orden);
-  } catch (error) {
-    return res.status(500).json({ message: "Error al crear orden", error: error.message || error });
-  }
-};
+const ordenController = {
 
-export const obtenerOrdenes = async (req, res) => {
+  crearOrden: async (req, res) => {
     try {
-    const ordenes = await Orden.findAll();
-    res.json(ordenes);
-  } catch (error) {
-    res.status(500).json({ message: "Error al obtener ordenes", error });
-  }
+      const { usuarioId, total, estado } = req.body;
+
+      if (!usuarioId || !total) {
+        return res.status(400).json({ msg: "usuarioId y total son obligatorios" });
+      }
+
+      const nuevaOrden = await Orden.create({
+        usuarioId,
+        total,
+        estado: estado || "pendiente",
+      });
+
+      res.status(201).json(nuevaOrden);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  obtenerOrdenes: async (req, res) => {
+    try {
+      const ordenes = await Orden.findAll();
+      res.json(ordenes);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  obtenerOrdenesPorUsuario: async (req, res) => {
+    try {
+      const { usuarioId } = req.params;
+
+      const ordenes = await Orden.findAll({
+        where: { usuarioId }
+      });
+
+      if (!ordenes.length) {
+        return res.status(404).json({ msg: "No hay órdenes para este usuario" });
+      }
+
+      res.json(ordenes);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  actualizarEstado: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { estado } = req.body;
+
+      const orden = await Orden.findByPk(id);
+
+      if (!orden) {
+        return res.status(404).json({ msg: "Orden no encontrada" });
+      }
+
+      orden.estado = estado;
+      await orden.save();
+
+      res.json(orden);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  eliminarOrden: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const orden = await Orden.findByPk(id);
+
+      if (!orden) {
+        return res.status(404).json({ msg: "Orden no encontrada" });
+      }
+
+      await orden.destroy();
+      res.json({ msg: "Orden eliminada correctamente" });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
 };
 
-export const obtenerOrdenPorId = async (req, res) => {
-  try {
-    const orden = await Orden.findByPk(req.params.id);
-    orden ? res.json(orden) : res.status(404).json({ message: "No encontrado" });
-  } catch (error) {
-    res.status(500).json({ message: "Error al buscar orden", error });
-  }
-};
-
-
-export const eliminarOrden = async (req, res) => {
-  try {
-    const orden = await Orden.findByPk(req.params.id);
-    if (!orden) return res.status(404).json({ message: "No encontrado" });
-
-    await orden.destroy();
-    res.json({ message: "Perfume eliminado correctamente" });
-  } catch (error) {
-    res.status(500).json({ message: "Error al eliminar orden", error });
-  }
-};
-
-
-export const recalcularTotal = recalcularTotalOrden;
-export const actualizarEstadoSegunPago = actualizarEstadoOrdenSegunPago;
+export default ordenController;
