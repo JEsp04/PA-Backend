@@ -1,9 +1,8 @@
 import express from "express";
-import { crearPago } from "../controllers/pagoController.js";
-import { recibirWebhook } from "../controllers/webHookController.js";
+import { procesarPago } from "../controllers/pagoController.js";
 
 const router = express.Router();
 
-router.post("/CrearPago", crearPago);
+router.post("/procesarPago", procesarPago);
 
 export default router;

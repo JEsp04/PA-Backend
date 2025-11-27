@@ -1,15 +1,24 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
+import Orden from "./orden.js";
 
 const OrdenDetalles = sequelize.define(
   "OrdenDetalles",
   {
-    ordenDetalleId: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    ordenDetalleId: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     ordenId: { type: DataTypes.INTEGER, allowNull: false },
     productoId: { type: DataTypes.INTEGER, allowNull: false },
     cantidad: { type: DataTypes.INTEGER, allowNull: false },
     precioUnitario: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
-    total: { type: DataTypes.DECIMAL(10, 2), allowNull: false, defaultValue: 0 },
+    total: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+      defaultValue: 0,
+    },
   },
   {
     tableName: "orden_detalles",
@@ -26,22 +35,24 @@ const calcularTotal = (detalle) => {
 OrdenDetalles.beforeCreate(calcularTotal);
 OrdenDetalles.beforeUpdate(calcularTotal);
 
-async function actualizarTotalOrden(ordenId) {
-  const [rows] = await sequelize.query(
-    "SELECT IFNULL(SUM(total),0) AS total FROM orden_detalles WHERE ordenId = ?",
-    { replacements: [ordenId] }
-  );
+async function actualizarTotalOrden(ordenId, transaction) {
+  // Usar las APIs de modelo con la transacción para evitar usar otra conexión
+  const total =
+    (await OrdenDetalles.sum("total", { where: { ordenId }, transaction })) ||
+    0;
 
-  const total = rows[0].total || 0;
-
-  await sequelize.query(
-    "UPDATE ordenes SET total = ? WHERE ordenId = ?",
-    { replacements: [total, ordenId] }
-  );
+  await Orden.update({ total }, { where: { ordenId }, transaction });
 }
 
-OrdenDetalles.afterCreate(detalle => actualizarTotalOrden(detalle.ordenId));
-OrdenDetalles.afterUpdate(detalle => actualizarTotalOrden(detalle.ordenId));
-OrdenDetalles.afterDestroy(detalle => actualizarTotalOrden(detalle.ordenId));
+// Pasar la transacción de los hooks a la función que actualiza la orden
+OrdenDetalles.afterCreate((detalle, options) =>
+  actualizarTotalOrden(detalle.ordenId, options?.transaction)
+);
+OrdenDetalles.afterUpdate((detalle, options) =>
+  actualizarTotalOrden(detalle.ordenId, options?.transaction)
+);
+OrdenDetalles.afterDestroy((detalle, options) =>
+  actualizarTotalOrden(detalle.ordenId, options?.transaction)
+);
 
 export default OrdenDetalles;
