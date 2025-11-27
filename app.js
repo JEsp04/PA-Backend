@@ -7,23 +7,15 @@ import carritoDetalleRoutes from "./routes/carritoDetalleRoutes.js";
 import ordenRoutes from "./routes/ordenRoutes.js";
 import detallesOrdenRoute from "./routes/detallesOrdenRoute.js";
 import pagoRoute from "./routes/pagoRoutes.js";
+import EnvioRoute from "./routes/envioRoutes.js";
+
 import cors from "cors";
-import { recibirWebhook } from "./controllers/webHookController.js";
 
-import { MercadoPagoConfig, Preference } from "mercadopago";
-
-export const mercadoPago = new MercadoPagoConfig({
-  access_token: process.env.MP_ACCESS_TOKEN,
-});
-
-// Hacer mercadopago global para acceso en controllers
-global.mercadoPago = mercadoPago;
 
 const app = express();
 
 app.use(cors());
 
-app.post("/api/pagos/webhook", express.raw({ type: "*/*" }), recibirWebhook);
 
 app.use(express.json());
 
@@ -42,5 +34,7 @@ app.use("/api/ordenes", ordenRoutes);
 app.use("/api/ordenes/detalles", detallesOrdenRoute);
 
 app.use("/api/pagos", pagoRoute);
+
+app.use("/api/envios", EnvioRoute);
 
 export default app;
