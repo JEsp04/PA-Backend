@@ -1,7 +1,7 @@
-import { Carrito, CarritoDetalle, Orden, OrdenDetalles, Pago, sequelize } from "../models/index.js";
+import { Carrito, CarritoDetalle, Orden, OrdenDetalles, Pago, Envio, sequelize } from "../models/index.js";
 
 export const procesarPago = async (req, res) => {
-  const { usuarioId, metodoPago } = req.body;
+  const { usuarioId, metodoPago, direccionId} = req.body;
 
   const t = await sequelize.transaction(); // 🔥 Inicio transacción
 
@@ -59,6 +59,13 @@ export const procesarPago = async (req, res) => {
       { transaction: t }
     );
 
+    // crear envío
+    const envio = await Envio.create({
+      ordenId: orden.ordenId,
+      direccionId: req.body.direccionId,
+    }
+    , { transaction: t });
+
     // 4) Vaciar carrito
     await CarritoDetalle.destroy({
       where: { carritoId: carrito.carritoId },
@@ -70,13 +77,17 @@ export const procesarPago = async (req, res) => {
       { where: { carritoId: carrito.carritoId }, transaction: t }
     );
 
+    
+
     await t.commit();
 
     res.json({
       message: "Pago procesado correctamente",
       pago,
       orden,
+      envio
     });
+
 
   } catch (error) {
     console.error("Error procesando pago:", error);
