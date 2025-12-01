@@ -8,16 +8,36 @@ import Orden from "./orden.js";
 import OrdenDetalles from "./detallesOrden.js";
 import Pago from "./pago.js";
 import Envio from "./envio.js";
+import Direccion from "./direccion.js";
 
 // ========================
 // Usuario - Carrito (1:1)
 // ========================
 Usuario.hasOne(Carrito, {
-  foreignKey: { name: "usuarioId", allowNull: false, unique: "uk_carrito_usuarioId" },
+  foreignKey: {
+    name: "usuarioId",
+    allowNull: false,
+    unique: "uk_carrito_usuarioId",
+  },
   onDelete: "CASCADE",
 });
 Carrito.belongsTo(Usuario, {
-  foreignKey: { name: "usuarioId", allowNull: false, unique: "uk_carrito_usuarioId" },
+  foreignKey: {
+    name: "usuarioId",
+    allowNull: false,
+    unique: "uk_carrito_usuarioId",
+  },
+});
+
+// ========================
+// Usuario - Direccion (1:N)
+// ========================
+Usuario.hasMany(Direccion, {
+  foreignKey: "usuarioId",
+  onDelete: "CASCADE",
+});
+Direccion.belongsTo(Usuario, {
+  foreignKey: "usuarioId",
 });
 
 // ========================
@@ -115,6 +135,17 @@ Envio.belongsTo(Orden, {
   foreignKey: "ordenId",
 });
 
+// ========================
+// Direccion - Envio (1:N)
+// ========================
+Direccion.hasMany(Envio, {
+  foreignKey: "direccionId",
+  onDelete: "CASCADE",
+});
+Envio.belongsTo(Direccion, {
+  foreignKey: "direccionId",
+});
+
 export {
   sequelize,
   Usuario,
@@ -125,4 +156,5 @@ export {
   OrdenDetalles,
   Pago,
   Envio,
+  Direccion,
 };
