@@ -76,7 +76,6 @@ Buenas prácticas y notas
 - Asegúrate de tener la base de datos creada y las credenciales en `.env` antes de arrancar.
 - El endpoint de procesamiento de pagos crea la orden, el pago y el registro de envío en una transacción para mantener consistencia.
 - Si piensas desplegar, cambia `JWT_SECRET` por una clave segura y configura el acceso a la base de datos en un host/usuario seguro.
-- Si piensas desplegar, cambia `JWT_SECRET` por una clave segura y configura el acceso a la base de datos en un host/usuario seguro.
 
 ## Preguntas de negocio y hallazgos
 
@@ -117,4 +116,4 @@ Buenas prácticas y notas
 
 ---
 
-_Sección agregada: Preguntas de negocio y hallazgos para entrega de proyecto._
+<img width="627" height="580" alt="image" src="https://github.com/user-attachments/assets/c5d9ac69-ba27-40a4-8858-1a3c8f2a2945" />
